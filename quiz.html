@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Quiz Maker</title>
+  <style>
+    :root {
+      --primary-color: #a8e6cf;
+      --secondary-color: #ffffff;
+      --highlight-color: #56c596;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--primary-color);
+    }
+    header {
+      background-color: var(--highlight-color);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav {
+      text-align: center;
+      margin: 1rem 0;
+    }
+    nav button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      background-color: var(--highlight-color);
+      color: white;
+      border-radius: 5px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 1rem;
+      background: var(--secondary-color);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .question-block {
+      margin: 1rem 0;
+    }
+    .question-block input[type="text"] {
+      width: 100%;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .option-input {
+      display: block;
+      margin: 0.25rem 0;
+    }
+    .quiz-option {
+      display: block;
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background-color: var(--primary-color);
+      border: 1px solid #56c596;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    .result {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .celebration {
+      color: green;
+      animation: pulse 1s infinite alternate;
+    }
+    .motivation {
+      color: #d9534f;
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Online Quiz Maker</h1>
+  </header>
+  <nav>
+    <button onclick="showPage('home')">Home</button>
+    <button onclick="showPage('create')">Create Quiz</button>
+    <button onclick="showPage('list')">Take Quiz</button>
+  </nav>
+  <div id="home" class="container">
+    <h2>Welcome to the Online Quiz Maker</h2>
+    <p>Create and take quizzes about programming languages like Java in a fun and personalized way!</p>
+  </div>
+  <div id="create" class="container hidden">
+    <h2>Create a Quiz</h2>
+    <form id="quizForm">
+      <div class="question-block">
+        <input type="text" placeholder="Enter your question here" name="question" required />
+        <input type="text" class="option-input" placeholder="Option A" name="optionA" required />
+        <input type="text" class="option-input" placeholder="Option B" name="optionB" required />
+        <input type="text" class="option-input" placeholder="Option C" name="optionC" required />
+        <input type="text" class="option-input" placeholder="Option D" name="optionD" required />
+        <input type="text" placeholder="Correct Answer (A/B/C/D)" name="correct" required />
+      </div>
+      <button type="submit">Save Quiz</button>
+    </form>
+  </div>
+  <div id="list" class="container hidden">
+    <h2>Available Quizzes</h2>
+    <button onclick="startQuiz()">Start Sample Java Quiz</button>
+  </div>
+  <div id="quiz" class="container hidden">
+    <h2>Take the Quiz</h2>
+    <form>
+      <div class="question-block">
+        <h3 id="quiz-question"></h3>
+        <div id="quiz-options"></div>
+      </div>
+    </form>
+    <button onclick="nextQuestion()">Next</button>
+  </div>
+  <div id="result" class="container hidden">
+    <h2>Quiz Results</h2>
+    <p class="result" id="final-score"></p>
+  </div>
+  <script>
+    const pages = ['home', 'create', 'list', 'quiz', 'result'];
+    const quizzes = [];
+    let currentQuiz = null;
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    document.getElementById('quizForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const newQuiz = {
+        questions: [
+          {
+            question: form.question.value,
+            options: [
+              form.optionA.value,
+              form.optionB.value,
+              form.optionC.value,
+              form.optionD.value
+            ],
+            correct: form.correct.value.toUpperCase()
+          }
+        ]
+      };
+      quizzes.push(newQuiz);
+      alert('Quiz saved!');
+      form.reset();
+      showPage('list');
+    });
+
+    function showPage(id) {
+      pages.forEach(page => {
+        document.getElementById(page).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function startQuiz() {
+      if (quizzes.length === 0) {
+        alert("No quiz available. Please create one first.");
+        return;
+      }
+      currentQuiz = quizzes[0];
+      currentQuestionIndex = 0;
+      score = 0;
+      showPage('quiz');
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const questionData = currentQuiz.questions[currentQuestionIndex];
+      document.getElementById('quiz-question').textContent = questionData.question;
+      const optionsDiv = document.getElementById('quiz-options');
+      optionsDiv.innerHTML = '';
+      questionData.options.forEach((option, idx) => {
+        const optionChar = String.fromCharCode(65 + idx);
+        const btn = document.createElement('button');
+        btn.textContent = `${optionChar}: ${option}`;
+        btn.className = 'quiz-option';
+        btn.onclick = (e) => {
+          e.preventDefault();
+          checkAnswer(optionChar);
+        };
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(answer) {
+      const correctAnswer = currentQuiz.questions[currentQuestionIndex].correct;
+      if (answer === correctAnswer) {
+        score++;
+      }
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < currentQuiz.questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      showPage('result');
+      const finalScore = document.getElementById('final-score');
+      const total = currentQuiz.questions.length;
+      finalScore.textContent = `You scored ${score} out of ${total}`;
+      if (score >= total / 2) {
+        finalScore.classList.add('celebration');
+        finalScore.textContent += " 🎉 Great job! You're doing awesome!";
+      } else {
+        finalScore.classList.add('motivation');
+        finalScore.textContent += " 💡 Keep practicing, you'll improve!";
+      }
+    }
+  </script>
+</body>
+</html>
